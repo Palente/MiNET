@@ -1140,6 +1140,40 @@ namespace MiNET.Net
 			return attributes;
 		}
 
+		public Itemstates ReadItemstates()
+		{
+			var result = new Itemstates();
+			uint count = ReadUnsignedVarInt();
+			for (int runtimeId = 0; runtimeId < count; runtimeId++)
+			{
+				var name = ReadString();
+				var legacyId = ReadShort();
+				result.Add(runtimeId, new Itemstate
+				{
+					Id = legacyId,
+					RuntimeId = runtimeId,
+					Name = name
+				});
+			}
+
+			return result;
+		}
+
+		public void Write(Itemstates itemstates)
+		{
+			if(itemstates == null)
+			{
+				WriteUnsignedVarInt(0);
+				return;
+			}
+			WriteUnsignedVarInt((uint) itemstates.Count);
+			foreach (var itemstate in itemstates.OrderBy(kvp => kvp.Key))
+			{
+				Write(itemstate.Value.Name);
+				Write(itemstate.Value.Id);
+			}
+		}
+
 		public Blockstates ReadBlockstates()
 		{
 			var result = new Blockstates();
@@ -1148,9 +1182,10 @@ namespace MiNET.Net
 			{
 				var name = ReadString();
 				var data = ReadShort();
+				var legacyId = ReadShort();
 				result.Add(runtimeId, new Blockstate
 				{
-					Id = -1,
+					Id = legacyId,
 					RuntimeId = runtimeId,
 					Name = name,
 					Data = data
@@ -1162,11 +1197,17 @@ namespace MiNET.Net
 
 		public void Write(Blockstates blockstates)
 		{
+			if (blockstates == null)
+			{
+				WriteUnsignedVarInt(0);
+				return;
+			}
 			WriteUnsignedVarInt((uint) blockstates.Count);
 			foreach (var blockstate in blockstates.OrderBy(kvp => kvp.Key))
 			{
 				Write(blockstate.Value.Name);
 				Write(blockstate.Value.Data);
+				Write((short) blockstate.Value.Id);
 			}
 		}
 
@@ -1414,6 +1455,7 @@ namespace MiNET.Net
 					WriteVarInt(1);
 					Write(rec.Result);
 					Write(new UUID(Guid.NewGuid().ToString()));
+					Write(rec.Block);
 				}
 				else if (recipe is ShapedRecipe)
 				{
@@ -1433,6 +1475,7 @@ namespace MiNET.Net
 					WriteVarInt(1);
 					Write(rec.Result);
 					Write(new UUID(Guid.NewGuid().ToString()));
+					Write(rec.Block);
 				}
 				else if (recipe is SmeltingRecipe)
 				{
@@ -1441,6 +1484,7 @@ namespace MiNET.Net
 					WriteSignedVarInt(rec.Input.Id);
 					if (rec.Input.Metadata != 0) WriteSignedVarInt(rec.Input.Metadata);
 					Write(rec.Result);
+					Write(rec.Block);
 				}
 				else if (recipe is MultiRecipe)
 				{
@@ -1483,6 +1527,7 @@ namespace MiNET.Net
 					ReadVarInt(); // 1?
 					recipe.Result = ReadItem();
 					recipe.Id = ReadUUID(); // Id
+					recipe.Block = ReadString(); // block?
 					recipes.Add(recipe);
 					//Log.Error("Read shapeless recipe");
 				}
@@ -1506,6 +1551,7 @@ namespace MiNET.Net
 						recipe.Result = ReadItem();
 					}
 					recipe.Id = ReadUUID(); // Id
+					recipe.Block = ReadString(); // block?
 					recipes.Add(recipe);
 					//Log.Error("Read shaped recipe");
 				}
@@ -1515,6 +1561,7 @@ namespace MiNET.Net
 					//short meta = (short) ReadVarInt(); // input (with metadata) 
 					short id = (short) ReadSignedVarInt(); // input (with metadata) 
 					Item result = ReadItem(); // Result
+					recipe.Block = ReadString(); // block?
 					recipe.Input = ItemFactory.GetItem(id, 0);
 					recipe.Result = result;
 					recipes.Add(recipe);
@@ -1528,6 +1575,7 @@ namespace MiNET.Net
 					short id = (short) ReadSignedVarInt(); // input (with metadata) 
 					short meta = (short) ReadSignedVarInt(); // input (with metadata) 
 					Item result = ReadItem(); // Result
+					recipe.Block = ReadString(); // block?
 					recipe.Input = ItemFactory.GetItem(id, meta);
 					recipe.Result = result;
 					recipes.Add(recipe);
@@ -1556,6 +1604,7 @@ namespace MiNET.Net
 					}
 
 					ReadUUID();
+					ReadString(); // block?
 				}
 				else if (recipeType == ShapedChemistry)
 				{
@@ -1577,6 +1626,7 @@ namespace MiNET.Net
 					}
 
 					ReadUUID(); // Id
+					ReadString(); // block?
 				}
 				else
 				{
@@ -1598,7 +1648,8 @@ namespace MiNET.Net
 		{
 			WriteSignedVarLong(map.MapId);
 			WriteUnsignedVarInt((uint) map.UpdateType);
-			Write((byte) 0);
+			Write((byte) 0); // dimension
+			Write(false);  // Locked
 
 			//if ((map.UpdateType & BITFLAG_ENTITY_UPDATE) == BITFLAG_ENTITY_UPDATE)
 			//{
@@ -1670,6 +1721,7 @@ namespace MiNET.Net
 			map.MapId = ReadSignedVarLong();
 			map.UpdateType = (byte) ReadUnsignedVarInt();
 			ReadByte(); // Dimension (waste)
+			ReadBool(); // Locked (waste)
 
 			if ((map.UpdateType & BITFLAG_ENTITY_UPDATE) == BITFLAG_ENTITY_UPDATE)
 			{
@@ -2067,6 +2119,8 @@ namespace MiNET.Net
 			};
 			jsonSerializerSettings.Converters.Add(new NbtIntConverter());
 			jsonSerializerSettings.Converters.Add(new NbtStringConverter());
+			jsonSerializerSettings.Converters.Add(new IPAddressConverter());
+			jsonSerializerSettings.Converters.Add(new IPEndPointConverter());
 
 			return JsonConvert.SerializeObject(message, jsonSerializerSettings);
 		}

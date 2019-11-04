@@ -54,9 +54,12 @@ namespace MiNET.Entities.Passive
 			AttackDamage = 2;
 
 			TargetBehaviors.Add(new HurtByTargetBehavior(this));
+			TargetBehaviors.Add(new FindAttackableEntityTargetBehavior<Sheep>(this, 16));
+			TargetBehaviors.Add(new FindAttackableEntityTargetBehavior<Rabbit>(this, 16));
+			//TargetBehaviors.Add(new FindAttackableEntityTargetBehavior<Fox>(this, 16));
 
 			Behaviors.Add(new SittingBehavior(this));
-			Behaviors.Add(new JumpAttackBehavior(this, 1.0));
+			//Behaviors.Add(new JumpAttackBehavior(this, 1.0));
 			Behaviors.Add(new MeleeAttackBehavior(this, 1.0, 16));
 			Behaviors.Add(new OwnerHurtByTargetBehavior(this));
 			Behaviors.Add(new OwnerHurtTargetBehavior(this));
@@ -100,7 +103,7 @@ namespace MiNET.Entities.Passive
 
 						for (int i = 0; i < 7; ++i)
 						{
-							Particle particle = new HeartParticle(Level, random.Next(3));
+							LegacyParticle particle = new HeartParticle(Level, random.Next(3));
 							particle.Position = KnownPosition + new Vector3(0, (float) (Height + 0.85d), 0);
 							particle.Spawn();
 						}
@@ -112,7 +115,7 @@ namespace MiNET.Entities.Passive
 					{
 						for (int i = 0; i < 7; ++i)
 						{
-							Particle particle = new SmokeParticle(Level);
+							LegacyParticle particle = new SmokeParticle(Level);
 							particle.Position = KnownPosition + new Vector3(0, (float) (Height + 0.85d), 0);
 							particle.Spawn();
 						}

@@ -34,6 +34,7 @@ using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MiNET.Blocks;
 using MiNET.Items;
+using MiNET.Net;
 using MiNET.Worlds;
 using Newtonsoft.Json.Linq;
 
@@ -43,6 +44,19 @@ namespace MiNET.Test
 	public class GeneralTests
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(GeneralTests));
+
+		[TestMethod]
+		public void DeltaEncodeTest()
+		{
+			float curr = 0.34453f;
+			float prev = -3.7989f;
+
+			int delta = McpeMoveEntityDelta.ToIntDelta(curr, prev);
+
+			float result = BitConverter.Int32BitsToSingle(BitConverter.SingleToInt32Bits((float) Math.Round(prev, 2)) + delta);
+
+			Assert.AreEqual(Math.Round(curr, 2), Math.Round(result, 2));
+		}
 
 		[TestMethod]
 		public void EncodePalettedChunk()
@@ -308,46 +322,14 @@ namespace MiNET.Test
 		[TestMethod]
 		public void GenerateClassesForBlocks()
 		{
-			Dictionary<int, Blockstate> blockstates = new Dictionary<int, Blockstate>();
+			Dictionary<int, Blockstate> blockstates = null;
 
 			var assembly = Assembly.GetAssembly(typeof(Block));
-			var legacyIdMap = new Dictionary<string, int>();
-			using (Stream stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".legacy_id_map.json"))
-			using (StreamReader reader = new StreamReader(stream))
+			using (var stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".blockstates.json"))
+			using (var reader = new StreamReader(stream))
 			{
-				var result = JObject.Parse(reader.ReadToEnd());
-
-				foreach (var obj in result)
-				{
-					legacyIdMap.Add(obj.Key, (int) obj.Value);
-				}
+				blockstates = Blockstates.FromJson(reader.ReadToEnd());
 			}
-
-			using (Stream stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".blockstates.json"))
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				dynamic jsonBlockstates = JArray.Parse(reader.ReadToEnd());
-
-				int runtimeId = 0;
-				foreach (var obj in jsonBlockstates)
-				{
-					try
-					{
-						var name = (string) obj.name;
-						if (legacyIdMap.TryGetValue(name, out var id))
-						{
-							blockstates.Add(runtimeId, new Blockstate() {Id = id, Data = (short) obj.data, Name = (string) obj.name, RuntimeId = runtimeId});
-							runtimeId++;
-						}
-					}
-					catch (Exception e)
-					{
-						Console.WriteLine($"{obj}");
-						throw;
-					}
-				}
-			}
-
 
 			List<(int, string)> blocks = new List<(int, string)>();
 

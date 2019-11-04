@@ -608,6 +608,7 @@ namespace MiNET.Client
 				{
 					writer.WriteLine($"new ShapelessRecipe(new Item({shapelessRecipe.Result.Id}, {shapelessRecipe.Result.Metadata}, {shapelessRecipe.Result.Count}),");
 					writer.Indent++;
+					writer.WriteLine($"Block = \"{recipe.Block}\";");
 					writer.WriteLine("new List<Item>");
 					writer.WriteLine("{");
 					writer.Indent++;
@@ -635,6 +636,7 @@ namespace MiNET.Client
 				{
 					writer.WriteLine($"new ShapedRecipe({shapedRecipe.Width}, {shapedRecipe.Height}, new Item({shapedRecipe.Result.Id}, {shapedRecipe.Result.Metadata}, {shapedRecipe.Result.Count}),");
 					writer.Indent++;
+					writer.WriteLine($"Block = \"{recipe.Block}\";");
 					writer.WriteLine("new Item[]");
 					writer.WriteLine("{");
 					writer.Indent++;
@@ -652,7 +654,7 @@ namespace MiNET.Client
 				SmeltingRecipe smeltingRecipe = recipe as SmeltingRecipe;
 				if (smeltingRecipe != null)
 				{
-					writer.WriteLine($"new SmeltingRecipe(new Item({smeltingRecipe.Result.Id}, {smeltingRecipe.Result.Metadata}, {smeltingRecipe.Result.Count}), new Item({smeltingRecipe.Input.Id}, {smeltingRecipe.Input.Metadata})),");
+					writer.WriteLine($"new SmeltingRecipe(new Item({smeltingRecipe.Result.Id}, {smeltingRecipe.Result.Metadata}, {smeltingRecipe.Result.Count}), new Item({smeltingRecipe.Input.Id}, {smeltingRecipe.Input.Metadata}), {smeltingRecipe.Block}),");
 					continue;
 				}
 
@@ -694,8 +696,9 @@ namespace MiNET.Client
 			Log.DebugFormat("NBT:\n{0}", message.namedtag.NbtFile.RootTag);
 		}
 
-		public override void HandleMcpeFullChunkData(McpeFullChunkData message)
+		public override void HandleMcpeLevelChunk(McpeLevelChunk message)
 		{
+			// TODO doesn't work anymore I guess
 			if (Client.IsEmulator) return;
 
 			if (Client._chunks.TryAdd(new Tuple<int, int>(message.chunkX, message.chunkZ), true))
@@ -999,7 +1002,7 @@ namespace MiNET.Client
 				var rid = (entity["rid"] as NbtInt).Value;
 				if(!Enum.IsDefined(typeof(EntityType), rid))
 				{
-					Console.WriteLine($"{{ (EntityType) {rid}, \"{id}\" }},");
+					Log.Debug($"{{ (EntityType) {rid}, \"{id}\" }},");
 				}
 			}
 		}
@@ -1017,6 +1020,50 @@ namespace MiNET.Client
 		}
 
 		public override void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
+		{
+		}
+
+		public override void HandleMcpeLevelEventGeneric(McpeLevelEventGeneric message)
+		{
+		}
+
+		public override void HandleMcpeLecternUpdate(McpeLecternUpdate message)
+		{
+		}
+
+		public override void HandleMcpeVideoStreamConnect(McpeVideoStreamConnect message)
+		{
+		}
+
+		public override void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
+		{
+		}
+
+		public override void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
+		{
+		}
+
+		public override void HandleMcpeMapCreateLockedCopy(McpeMapCreateLockedCopy message)
+		{
+		}
+
+		public override void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataExportRequest message)
+		{
+		}
+
+		public override void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataExportResponse message)
+		{
+		}
+
+		public override void HandleMcpeUpdateBlockProperties(McpeUpdateBlockProperties message)
+		{
+		}
+
+		public override void HandleMcpeClientCacheBlobStatus(McpeClientCacheBlobStatus message)
+		{
+		}
+
+		public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
 		{
 		}
 	}

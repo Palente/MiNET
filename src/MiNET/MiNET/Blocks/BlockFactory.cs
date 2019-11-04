@@ -80,36 +80,15 @@ namespace MiNET.Blocks
 
 			var assembly = Assembly.GetAssembly(typeof(Block));
 
-			var legacyIdMap = new Dictionary<string, int>();
-			using (Stream stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".legacy_id_map.json"))
-			using (var reader = new JsonTextReader(new StreamReader(stream)))
+			using (var stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".blockstates.json"))
+			using (var reader = new StreamReader(stream))
 			{
-				var result = JObject.Load(reader);
-
-				foreach (var obj in result)
-				{
-					legacyIdMap.Add(obj.Key, (int) obj.Value);
-				}
+				Blockstates = Blockstates.FromJson(reader.ReadToEnd());
 			}
 
-			using (Stream stream = assembly.GetManifestResourceStream(typeof(Block).Namespace + ".blockstates.json"))
-			using (var reader = new JsonTextReader(new StreamReader(stream)))
+			foreach (var bs in Blockstates)
 			{
-				dynamic result = JArray.Load(reader);
-
-				int runtimeId = 0;
-				foreach (var obj in result)
-				{
-					var name = (string) obj.name;
-
-					if (legacyIdMap.TryGetValue(name, out int id))
-					{
-						LegacyToRuntimeId[(id << 4) | (byte) obj.data] = runtimeId;
-					}
-
-					Blockstates.Add(runtimeId, new Blockstate() {Id = id, Data = (short) obj.data, Name = name, RuntimeId = runtimeId});
-					runtimeId++;
-				}
+				LegacyToRuntimeId[(bs.Value.Id << 4) | (byte) bs.Value.Data] = bs.Key;
 			}
 		}
 
@@ -610,6 +589,8 @@ namespace MiNET.Blocks
 			else if (blockId == 450) block = new Grindstone();
 			else if (blockId == 451) block = new BlastFurnace();
 			else if (blockId == 453) block = new Smoker();
+			else if (blockId == 454) block = new LitSmoker();
+			else if (blockId == 469) block = new LitBlastFurnace();
 			else if (blockId == 455) block = new CartographyTable();
 			else if (blockId == 456) block = new FletchingTable();
 			else if (blockId == 457) block = new SmithingTable();

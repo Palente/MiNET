@@ -44,6 +44,7 @@ using MiNET.Entities;
 using MiNET.Entities.Passive;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Particles;
 using MiNET.Plugins;
 using MiNET.Plugins.Attributes;
 using MiNET.Plugins.Commands;
@@ -86,6 +87,33 @@ namespace TestPlugin
 		[Command(Name = "tc", Description = "Test command")]
 		public void TestCommand(Player player, int param)
 		{
+		}
+
+		[Command(Name = "bossbar")]
+		public void BossbarCommand(Player player)
+		{
+			var bossBar = new BossBar(player.Level)
+			{
+				Animate = false,
+				MaxProgress = 10,
+				Progress = 10,
+				NameTag = $"{ChatColors.Gold}You are playing on a {ChatColors.Gold}MiNET{ChatColors.Gold} server"
+			};
+			bossBar.SpawnEntity();
+		}
+
+		[Command(Name = "tlp", Description = "Test all legacy particles!")]
+		public async void TestLegactParticles(Player player)
+		{
+			for(var i = 0; i <= (int)ParticleType.Sneeze; i++)
+			{
+				new LegacyParticle(i, player.Level)
+				{
+					Position = player.KnownPosition
+				}.Spawn();
+				player.SendMessage(((ParticleType) i).ToString());
+				await Task.Delay(2000);
+			}
 		}
 
 		[Command(Name = "pe", Description = "Particle effects!")]
@@ -181,8 +209,8 @@ namespace TestPlugin
 							{
 								if (!level.IsAir(new BlockCoordinates((int) x, (int) y, (int) z))) continue;
 
-								//var particle = new Particle(particleId, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
-								//var particle = new Particle(10, level) {Position = new Vector3(x, y, z)};
+								//var particle = new LegacyParticle(particleId, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
+								//var particle = new LegacyParticle(10, level) {Position = new Vector3(x, y, z)};
 								//particle.Spawn(new[] {player});
 
 								McpeLevelEvent particleEvent = McpeLevelEvent.CreateObject();
@@ -203,8 +231,8 @@ namespace TestPlugin
 					//		{
 					//			if (!level.IsAir(new BlockCoordinates((int) x, (int) y, (int) z))) continue;
 
-					//			//var particle = new Particle(10, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
-					//			var particle = new Particle(10, Player.Level) {Position = new Vector3(x, y, z)};
+					//			//var particle = new LegacyParticle(10, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
+					//			var particle = new LegacyParticle(10, Player.Level) {Position = new Vector3(x, y, z)};
 					//			particle.Spawn(new[] {Player});
 					//		}
 					//	}
@@ -219,8 +247,8 @@ namespace TestPlugin
 							{
 								if (!level.IsAir(new BlockCoordinates((int) x, (int) y, (int) z))) continue;
 
-								//var particle = new Particle(10, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
-								//var particle = new Particle(10, level) {Position = new Vector3(x, y, z)};
+								//var particle = new LegacyParticle(10, Player.Level) {Position = new Vector3(x, y, z) + new Vector3(0.5f, 0.5f, 0.5f)};
+								//var particle = new LegacyParticle(10, level) {Position = new Vector3(x, y, z)};
 								//particle.Spawn(new[] {player});
 
 								McpeLevelEvent particleEvent = McpeLevelEvent.CreateObject();
